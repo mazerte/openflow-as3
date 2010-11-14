@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:mxml="fr.mazerte.controls.openflow.mxml.*"
+		 addedToStage="group1_addedToStageHandler(event)" xmlns:layout="fr.mazerte.controls.openflow.layout.*" xmlns:seek="fr.mazerte.controls.openflow.seek.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import aze.motion.easing.Back;
+			import aze.motion.easing.Cubic;
+			import aze.motion.easing.Elastic;
+			import aze.motion.easing.Expo;
+			import aze.motion.easing.Linear;
+			import aze.motion.easing.Quadratic;
+			import aze.motion.easing.Quart;
+			import aze.motion.easing.Quint;
+			
+			import fr.mazerte.controls.openflow.env.FlashEnv;
+			import fr.mazerte.controls.openflow.env.IEnv;
+			import fr.mazerte.controls.openflow.interpolator.DefaultInterpolator;
+			import fr.mazerte.controls.openflow.layout.DefaultLayout;
+			import fr.mazerte.controls.openflow.layout.ILayout;
+			import fr.mazerte.controls.openflow.seek.DefaultSeeker;
+			import fr.mazerte.controls.openflow.seek.ISeeker;
+			import fr.mazerte.openflowBuilder.datas.OpenFlowGlobals;
+			import fr.mazerte.openflowBuilder.itemRenderer.ColorItemRenderer;
+			import fr.mazerte.openflowBuilder.itemRenderer.DefaultItemRenderer;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			public var pData:ArrayCollection = new ArrayCollection([0,1,2,3,4,5,6,7,8,9]);
+			
+			[Bindable]
+			public var pItemRenderer:Class = DefaultItemRenderer;
+			
+			[Bindable]
+			public var pEnv:IEnv = new FlashEnv();
+			
+			[Bindable]
+			public var pLayout:ILayout = defaultLayout;
+			
+			[Bindable]
+			public var pInterpolators:Array = [
+				new DefaultInterpolator()	
+			];
+			
+			[Bindable]
+			public var pSeeker:ISeeker = defaultSeeker;
+			
+			/////////////////////////////////////////////////////////////////
+			
+			private var _mouseIsDown:Boolean = false;
+			private var _oldX:Number;
+			private var _xOffset:Number = 0;
+			
+			protected function group1_addedToStageHandler(event:Event):void
+			{
+				stage.addEventListener(KeyboardEvent.KEY_DOWN, _keyDownHandler);
+				stage.addEventListener(MouseEvent.MOUSE_DOWN, _mouseDownHandler);
+			}
+			
+			private function _mouseDownHandler(event:MouseEvent):void
+			{
+				_mouseIsDown = true;
+				_oldX = stage.mouseX;
+				if(_coverflow.hitTestPoint(stage.mouseX, stage.mouseY))
+				{
+					stage.addEventListener(Event.ENTER_FRAME, _mouseMoveHandler);
+					stage.addEventListener(MouseEvent.MOUSE_UP, _mouseUpHandler);
+				}
+			}
+			
+			private function _mouseMoveHandler(event:Event):void
+			{
+				if(!_mouseIsDown)
+					return;
+				
+				_xOffset = stage.mouseX - _oldX;
+				_coverflow.setSeek(_coverflow.getSeek() + ( - (_xOffset / 444)), false); 
+				
+				_oldX = stage.mouseX;
+			}
+			
+			private function _mouseUpHandler(event:MouseEvent):void
+			{
+				if(!_mouseIsDown)
+					return;
+				
+				_mouseIsDown = false;
+				
+				_coverflow.setSeek(Math.round(_coverflow.getSeek() + ( - (_xOffset / 444) * 4)));
+				
+				_xOffset = 0;
+				
+				stage.removeEventListener(Event.ENTER_FRAME, _mouseMoveHandler);
+				stage.removeEventListener(MouseEvent.MOUSE_UP, _mouseUpHandler);
+			}
+			
+			private function _keyDownHandler(event:KeyboardEvent):void
+			{
+				switch(event.keyCode)
+				{
+					case Keyboard.LEFT:
+						_coverflow.prev();
+						break;
+					case Keyboard.RIGHT:
+						_coverflow.next();
+						break;
+				}
+			}
+
+
+			protected function btAdd_clickHandler(event:MouseEvent):void
+			{
+				pData.addItemAt(Math.random(), _coverflow.getSeek());
+				_coverflow.data = pData;
+			}
+
+
+			protected function btRemove_clickHandler(event:MouseEvent):void
+			{
+				pData.removeItemAt(_coverflow.getSeek());
+				_coverflow.data = pData;
+			}
+
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Placer ici les éléments non visuels (services et objets de valeur, par exemple). -->
+		
+		<!-- DATAS -->
+		
+		<!-- ITEMS -->
+		<s:ArrayList id="listItems">
+			<fx:Object label="DefaultItemRenderer" 	item="{DefaultItemRenderer}"	state="0" />
+			<fx:Object label="ColorItemRenderer" 	item="{ColorItemRenderer}"		state="1" />
+		</s:ArrayList>
+		
+		<!-- ENVIRONNEMENT -->
+		
+		<!-- LAYOUTS -->
+		<s:ArrayList id="listLayouts">
+			<fx:Object label="DefaultLayout" 			layout="{defaultLayout}" 	state="0" />
+			<fx:Object label="AppleHorizontalLayout" 	layout="{appleHLayout}" 	state="1" />
+			<fx:Object label="AppleVerticalLayout" 		layout="{appleVLayout}" 	state="2" />
+			<fx:Object label="CercularLayout" 			layout="{cercularLayout}" 	state="3" />
+		</s:ArrayList>
+		<layout:DefaultLayout id="defaultLayout"
+			angleX="{sDefaultLayoutAngleX.value}" 	angleY="{sDefaultLayoutAngleY.value}" 	angleZ="{sDefaultLayoutAngleZ.value}" 
+			offsetX="{sDefaultLayoutOffsetX.value}" offsetY="{sDefaultLayoutOffsetY.value}" offsetZ="{sDefaultLayoutOffsetZ.value}" 
+			gapX="{sDefaultLayoutGapX.value}" 		gapY="{sDefaultLayoutGapY.value}" 		gapZ="{sDefaultLayoutGapZ.value}" 
+		/>
+		<layout:AppleHorizontalLayout id="appleHLayout"
+			angle="{sAppleHorizontalLayoutAngle.value}"
+			offsetX="{sAppleHorizontalLayoutOffsetX.value}" offsetZ="{sAppleHorizontalLayoutOffsetZ.value}" 
+			gap="{sAppleHorizontalLayoutGap.value}"
+		/>
+		<layout:AppleVerticalLayout id="appleVLayout"
+			angle="{sAppleVerticalLayoutAngle.value}"
+			offsetY="{sAppleVerticalLayoutOffsetY.value}" offsetZ="{sAppleVerticalLayoutOffsetZ.value}" 
+			gap="{sAppleVerticalLayoutGap.value}"
+		/>
+		<layout:CercularLayout id="cercularLayout"
+			angle="{sCercularLayoutAngle.value}" 						angleOffset="{sCercularLayoutAngleOffset.value}" 
+			distance="{sCercularLayoutDistance.value}" 					distanceOffset="{sCercularLayoutDistanceOffset.value}" 
+			offsetX="{sCercularLayoutOffsetX.value}" 					offsetY="{sCercularLayoutOffsetY.value}" 						offsetZ="{sCercularLayoutOffsetZ.value}" 
+			gapX="{sCercularLayoutGapX.value}" 							gapY="{sCercularLayoutGapY.value}" 								gapZ="{sCercularLayoutGapZ.value}" 
+			rotationX="{sCercularLayoutRotationX.value}" 				rotationY="{sCercularLayoutRotationY.value}" 					rotationZ="{sCercularLayoutRotationZ.value}" 
+			globalRotationX="{sCercularLayoutGlobalRotationX.value}" 	globalRotationY="{sCercularLayoutGlobalRotationY.value}" 	globalRotationZ="{sCercularLayoutGlobalRotationZ.value}" 
+			offsetRotationX="{sCercularLayoutOffsetRotationX.value}" 	offsetRotationY="{sCercularLayoutOffsetRotationY.value}" 	offsetRotationZ="{sCercularLayoutOffsetRotationZ.value}"
+		/>
+		
+		<!-- INTERPOLATORS -->
+		
+		<!-- SEEKER -->
+		<s:ArrayList id="listSeeker">
+			<fx:Object label="DefaultSeeker" 	seeker="{defaultSeeker}" state="0" />
+			<fx:Object label="None" 			seeker="{null}"			 state="1" />
+		</s:ArrayList>
+		<seek:DefaultSeeker id="defaultSeeker" easing="{ddlDefaultSeekerEasing.selectedItem.value}" duration="{sDefaultSeekerDuration.value}" />
+		
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout gap="0" />
+	</s:layout>
+	
+	<mxml:OpenFlow id="_coverflow" width="100%" height="100%"
+		data="{pData}" itemRenderer="{pItemRenderer}" env="{pEnv}"
+		layout="{pLayout}" interpolators="{pInterpolators}" seeker="{pSeeker}"
+		bgColor="0x000000" bgAlpha="1"
+	/>
+	
+	<s:Group width="100%" height="200">
+		
+		<mx:TabNavigator top="5" left="0" right="0" bottom="0">
+			
+			<s:NavigatorContent label="DATAS">
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
+				<s:HGroup verticalAlign="middle">
+					<s:Button id="btAdd" label="ADD ITEM" click="btAdd_clickHandler(event)" />
+					<s:Button id="btRemove" label="REMOVE ITEM" click="btRemove_clickHandler(event)"/>
+					<s:Label text="Number of items: {pData.length}"/>
+				</s:HGroup>
+			</s:NavigatorContent>
+			
+			<s:NavigatorContent label="ITEMS" width="100%" height="100%">
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
+				<s:DropDownList id="ddlItems" dataProvider="{listItems}" selectedIndex="0" width="300" change="pItemRenderer = ddlItems.selectedItem.item as Class;" />
+				<mx:Canvas width="100%" height="100%">
+					<s:HGroup top="0" left="0" right="0" bottom="0">
+						<!-- SIZE -->
+						<s:VGroup>
+							<s:Label text="SIZE" />
+							<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultItemRendererWidth" value="444" minimum="1" maximum="2000" height="20" change="OpenFlowGlobals.getInstance().itemWidth = sDefaultItemRendererWidth.value; _coverflow.update();"/><s:NumericStepper id="nDefaultItemRendererWidth" stepSize="1" minimum="0" maximum="2000" value="@{sDefaultItemRendererWidth.value}" width="50" change="OpenFlowGlobals.getInstance().itemWidth = sDefaultItemRendererWidth.value; _coverflow.update();"/></s:HGroup>
+							<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultItemRendererHeight" value="326" minimum="1" maximum="2000" height="20" change="OpenFlowGlobals.getInstance().itemHeight = sDefaultItemRendererHeight.value; _coverflow.update();" /><s:NumericStepper id="nDefaultItemRendererHeight" stepSize="1" minimum="0" maximum="2000" value="@{sDefaultItemRendererHeight.value}" width="50" change="OpenFlowGlobals.getInstance().itemHeight = sDefaultItemRendererHeight.value; _coverflow.update();"/></s:HGroup>
+						</s:VGroup>
+						<!-- ALPHA -->
+						<s:VGroup>
+							<s:Label text="ALPHA" />
+							<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultItemRendererAlpha" value="1" minimum="0" maximum="1" height="20" change="OpenFlowGlobals.getInstance().itemAlpha = sDefaultItemRendererAlpha.value; _coverflow.update();" /><s:NumericStepper id="nDefaultItemRendererAlpha" stepSize="0.01" minimum="0" maximum="1" value="@{sDefaultItemRendererAlpha.value}" width="50" change="OpenFlowGlobals.getInstance().itemAlpha = sDefaultItemRendererAlpha.value; _coverflow.update();"/></s:HGroup>
+						</s:VGroup>
+					</s:HGroup>
+				</mx:Canvas>
+			</s:NavigatorContent>
+			
+			<s:NavigatorContent label="ENVIRONNEMENT">
+				
+			</s:NavigatorContent>
+			
+			<s:NavigatorContent label="LAYOUT" width="100%" height="100%">
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
+				<s:DropDownList id="ddlLayout" dataProvider="{listLayouts}" selectedIndex="0" width="300" change="pLayout = ddlLayout.selectedItem.layout as ILayout;" />
+				<mx:ViewStack selectedIndex="{ddlLayout.selectedItem.state}" width="100%" height="100%">
+					<!-- DefaultLayout -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- ANGLE -->
+							<s:VGroup>
+								<s:Label text="ANGLE" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutAngleX" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nDefaultLayoutAngleX" stepSize="1" minimum="-180" maximum="180" value="@{sDefaultLayoutAngleX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutAngleY" value="65" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nDefaultLayoutAngleY" stepSize="1" minimum="-180" maximum="180" value="@{sDefaultLayoutAngleY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutAngleZ" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nDefaultLayoutAngleZ" stepSize="1" minimum="-180" maximum="180" value="@{sDefaultLayoutAngleZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- OFFSET -->
+							<s:VGroup>
+								<s:Label text="OFFSET" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutOffsetX" value="75" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nDefaultLayoutOffsetX" stepSize="1" minimum="-1000" maximum="1000" value="@{sDefaultLayoutOffsetX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutOffsetY" value="0" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nDefaultLayoutOffsetY" stepSize="1" minimum="-1000" maximum="1000" value="@{sDefaultLayoutOffsetY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutOffsetZ" value="0" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nDefaultLayoutOffsetZ" stepSize="1" minimum="-1000" maximum="1000" value="@{sDefaultLayoutOffsetZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- GAP -->
+							<s:VGroup>
+								<s:Label text="GAP" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutGapX" value="300" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nDefaultLayoutGapX" stepSize="1" minimum="-1000" maximum="1000" value="@{sDefaultLayoutGapX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutGapY" value="0" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nDefaultLayoutGapY" stepSize="1" minimum="-1000" maximum="1000" value="@{sDefaultLayoutGapY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultLayoutGapZ" value="300" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nDefaultLayoutGapZ" stepSize="1" minimum="-1000" maximum="1000" value="@{sDefaultLayoutGapZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+					<!-- AppleHorizontalLayout -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- ANGLE -->
+							<s:VGroup>
+								<s:Label text="ANGLE" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleHorizontalLayoutAngle" value="80" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nAppleHorizontalLayoutAngle" stepSize="1" minimum="-180" maximum="180" value="@{sAppleHorizontalLayoutAngle.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- OFFSET -->
+							<s:VGroup>
+								<s:Label text="OFFSET" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleHorizontalLayoutOffsetX" value="200" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nAppleHorizontalLayoutOffsetX" stepSize="1" minimum="-1000" maximum="1000" value="@{sAppleHorizontalLayoutOffsetX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleHorizontalLayoutOffsetZ" value="180" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nAppleHorizontalLayoutOffsetZ" stepSize="1" minimum="-1000" maximum="1000" value="@{sAppleHorizontalLayoutOffsetZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- GAP -->
+							<s:VGroup>
+								<s:Label text="GAP" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleHorizontalLayoutGap" value="120" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nAppleHorizontalLayoutGaX" stepSize="1" minimum="-1000" maximum="1000" value="@{sAppleHorizontalLayoutGap.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+					<!-- AppleVerticalLayout -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- ANGLE -->
+							<s:VGroup>
+								<s:Label text="ANGLE" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleVerticalLayoutAngle" value="-80" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nAppleVerticalLayoutAngle" stepSize="1" minimum="-180" maximum="180" value="@{sAppleVerticalLayoutAngle.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- OFFSET -->
+							<s:VGroup>
+								<s:Label text="OFFSET" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleVerticalLayoutOffsetY" value="100" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nAppleVerticalLayoutOffsetY" stepSize="1" minimum="-1000" maximum="1000" value="@{sAppleVerticalLayoutOffsetY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleVerticalLayoutOffsetZ" value="150" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nAppleVerticalLayoutOffsetZ" stepSize="1" minimum="-1000" maximum="1000" value="@{sAppleVerticalLayoutOffsetZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- GAP -->
+							<s:VGroup>
+								<s:Label text="GAP" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sAppleVerticalLayoutGap" value="120" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nAppleVerticalLayoutGaX" stepSize="1" minimum="-1000" maximum="1000" value="@{sAppleVerticalLayoutGap.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+					<!-- CercularLayout -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- ANGLE -->
+							<s:VGroup>
+								<s:Label text="ANGLE" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutAngle" value=".63" minimum="-2" maximum="2" height="20" /><s:NumericStepper id="nCercularLayoutAngle" stepSize=".01" minimum="-6" maximum="6" value="@{sCercularLayoutAngle.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutAngleOffset" value="{Math.PI}" minimum="{-Math.PI}" maximum="{Math.PI}" height="20" /><s:NumericStepper id="nCercularLayoutAngleOffset" stepSize=".1" minimum="-180" maximum="180" value="@{sCercularLayoutAngleOffset.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- DISTANCE -->
+							<s:VGroup>
+								<s:Label text="DISTANCE" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutDistance" value="0" minimum="-100" maximum="100" height="20" /><s:NumericStepper id="nCercularLayoutDistance" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutDistance.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutDistanceOffset" value="725" minimum="-5000" maximum="5000" height="20" /><s:NumericStepper id="nCercularLayoutDistanceOffset" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutDistanceOffset.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- OFFSET -->
+							<s:VGroup>
+								<s:Label text="OFFSET" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetX" value="0" minimum="-5000" maximum="5000" height="20" /><s:NumericStepper id="nCercularLayoutOffsetX" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetY" value="0" minimum="-5000" maximum="5000" height="20" /><s:NumericStepper id="nCercularLayoutOffsetY" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetZ" value="805" minimum="-5000" maximum="5000" height="20" /><s:NumericStepper id="nCercularLayoutOffsetZ" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- GAP -->
+							<s:VGroup>
+								<s:Label text="GAP" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutGapX" value="0" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nCercularLayoutGapX" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutGapX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutGapY" value="0" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nCercularLayoutGapY" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutGapY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutGapZ" value="0" minimum="-1000" maximum="1000" height="20" /><s:NumericStepper id="nCercularLayoutGapZ" stepSize="1" minimum="-1000" maximum="1000" value="@{sCercularLayoutGapZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- ROTATION -->
+							<s:VGroup>
+								<s:Label text="ROTATION" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutRotationX" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutRotationX" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutRotationX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutRotationY" value="36" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutRotationY" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutRotationY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutRotationZ" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutRotationZ" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutRotationZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- GLOBAL ROTATION -->
+							<s:VGroup>
+								<s:Label text="GLOBAL ROTATION" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutGlobalRotationX" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutGlobalRotationX" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutGlobalRotationX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutGlobalRotationY" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutGlobalRotationY" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutGlobalRotationY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutGlobalRotationZ" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutGlobalRotationZ" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutGlobalRotationZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+							<!-- OFFSET ROTATION -->
+							<s:VGroup>
+								<s:Label text="OFFSET ROTATION" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetRotationX" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutOffsetRotationX" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetRotationX.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetRotationY" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutOffsetRotationY" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetRotationY.value}" width="50" /></s:HGroup>
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetRotationZ" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutOffsetRotationZ" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetRotationZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+				</mx:ViewStack>
+			</s:NavigatorContent>
+			
+			<s:NavigatorContent label="INTERPOLATORS">
+				
+			</s:NavigatorContent>
+			
+			<s:NavigatorContent label="SEEKER" width="100%" height="100%">
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
+				<s:DropDownList id="ddlSeeker" dataProvider="{listSeeker}" selectedIndex="0" width="300" change="pSeeker = ddlSeeker.selectedItem.seeker as ISeeker;" />
+				<mx:ViewStack selectedIndex="{ddlSeeker.selectedItem.state}" width="100%" height="100%">
+					<!-- DefaultSeeker -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- EASING FUNCTION -->
+							<s:VGroup>
+								<s:Label text="EASING FUNCTION" />
+								<s:DropDownList id="ddlDefaultSeekerEasing" selectedIndex="15" width="300">
+									<s:ArrayCollection>
+										<fx:Object label="Back.easeIn" value="{Back.easeIn}"/>
+										<fx:Object label="Back.easeInOut" value="{Back.easeInOut}"/>
+										<fx:Object label="Back.easeOut" value="{Back.easeOut}"/>
+										
+										<fx:Object label="Cubic.easeIn" value="{Cubic.easeIn}"/>
+										<fx:Object label="Cubic.easeInOut" value="{Cubic.easeInOut}"/>
+										<fx:Object label="Cubic.easeOut" value="{Cubic.easeOut}"/>
+										
+										<fx:Object label="Elastic.easeIn" value="{Elastic.easeIn}"/>
+										<fx:Object label="Elastic.easeInOut" value="{Elastic.easeInOut}"/>
+										<fx:Object label="Elastic.easeOut" value="{Elastic.easeOut}"/>
+										
+										<fx:Object label="Expo.easeIn" value="{Expo.easeIn}"/>
+										<fx:Object label="Expo.easeInOut" value="{Expo.easeInOut}"/>
+										<fx:Object label="Expo.easeOut" value="{Expo.easeOut}"/>
+										
+										<fx:Object label="Linear.easeNone" value="{Linear.easeNone}"/>
+										
+										<fx:Object label="Quadratic.easeIn" value="{Quadratic.easeIn}"/>
+										<fx:Object label="Quadratic.easeInOut" value="{Quadratic.easeInOut}"/>
+										<fx:Object label="Quadratic.easeOut" value="{Quadratic.easeOut}"/>
+										
+										<fx:Object label="Quart.easeIn" value="{Quart.easeIn}"/>
+										<fx:Object label="Quart.easeInOut" value="{Quart.easeInOut}"/>
+										<fx:Object label="Quart.easeOut" value="{Quart.easeOut}"/>
+										
+										<fx:Object label="Quint.easeIn" value="{Quint.easeIn}"/>
+										<fx:Object label="Quint.easeInOut" value="{Quint.easeInOut}"/>
+										<fx:Object label="Quint.easeOut" value="{Quint.easeOut}"/>
+									</s:ArrayCollection>
+								</s:DropDownList>
+							</s:VGroup>
+							<!-- DURATION -->
+							<s:VGroup>
+								<s:Label text="DURATION" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sDefaultSeekerDuration" value=".5" minimum="0" maximum="10" height="20" /><s:NumericStepper id="nDefaultSeekerDuration" stepSize=".1" minimum="0" maximum="10" value="@{sDefaultSeekerDuration.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+					<!-- NONE -->
+					<mx:Canvas width="100%" height="100%"></mx:Canvas>
+				</mx:ViewStack>
+			</s:NavigatorContent>
+			
+		</mx:TabNavigator>
+		
+	</s:Group>
+	
+</s:Group>
