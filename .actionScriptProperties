@@ -14,7 +14,10 @@
   </compiler>
   <applications>
     <application path="OpenFlow.mxml">
-      <airExcludes/>
+      <airExcludes>
+        <airExclude path="away3d"/>
+        <airExclude path="org"/>
+      </airExcludes>
     </application>
   </applications>
   <modules/>
