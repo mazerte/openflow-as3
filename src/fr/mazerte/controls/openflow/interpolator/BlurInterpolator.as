@@ -15,18 +15,18 @@ package fr.mazerte.controls.openflow.interpolator
 
 	public class BlurInterpolator implements IInterpolator
 	{
-		private var _env:String;
+		protected var _env:String;
 		
 		protected var _length:int;
 		protected var _width:Number;
 		protected var _height:Number;
 		
-		private var _duration:Number = .5;
+		protected var _duration:Number = .5;
 		
-		private var _maxBlur:Number = 10;
-		private var _maxZ:Number = 900;
-		private var _blurAfterMax:Number = 10;
-		private var _quality:int = 1;
+		protected var _maxBlur:Number = 10;
+		protected var _maxZ:Number = 900;
+		protected var _blurAfterMax:Number = 10;
+		protected var _quality:int = 1;
 		
 		public function BlurInterpolator()
 		{

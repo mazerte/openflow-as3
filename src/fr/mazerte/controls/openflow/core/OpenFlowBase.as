@@ -176,6 +176,9 @@ package fr.mazerte.controls.openflow.core
 			var flag:Boolean = false;
 			var renderer:IItemRenderer;
 			var items:Array = [];
+			
+			_layout.setLength(a.length);
+			
 			for(var i:uint = 0; i < a.length; i++)
 			{
 				flag = false;
@@ -294,7 +297,7 @@ package fr.mazerte.controls.openflow.core
 			if(withAnim)
 			{
 				
-				if(n < 0)
+				if(n <= 0)
 					_seek = 0;
 				else if(n > _data.length - 1)
 					_seek = _data.length - 1;

@@ -7,14 +7,14 @@ package fr.mazerte.controls.openflow.seek
 
 	public class DefaultSeeker implements ISeeker
 	{
-		private var _openFlow:OpenFlowBase;
+		protected var _openFlow:OpenFlowBase;
 		public var mock:Number;
 		
-		private var _start:Number;
-		private var _end:Number;
+		protected var _start:Number;
+		protected var _end:Number;
 		
-		private var _easing:Function;
-		private var _duration:Number = .5;
+		protected var _easing:Function;
+		protected var _duration:Number = .5;
 		
 		public function DefaultSeeker()
 		{
@@ -41,7 +41,7 @@ package fr.mazerte.controls.openflow.seek
 				_openFlow.setSeek(_end, true);
 		}
 		
-		private function _update():void
+		protected function _update():void
 		{
 			_openFlow.setSeek(mock, false);
 		}

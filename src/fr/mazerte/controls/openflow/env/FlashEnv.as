@@ -23,7 +23,7 @@ package fr.mazerte.controls.openflow.env
 		protected var _layout:ILayout;
 		protected var _interpolators:Array;
 		
-		private var _items:Array;
+		protected var _items:Array;
 		public var _container:Sprite;
 		
 		protected var _width:Number = 0;

@@ -20,7 +20,7 @@ package fr.mazerte.controls.openflow.interpolator
 		protected var _width:Number;
 		protected var _height:Number;
 		
-		private var _duration:Number = .5;
+		protected var _duration:Number = .5;
 		
 		public function DefaultInterpolator()
 		{

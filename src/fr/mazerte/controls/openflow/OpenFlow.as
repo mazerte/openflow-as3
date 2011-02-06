@@ -6,15 +6,16 @@ CopyRight: 2010
 */
 package fr.mazerte.controls.openflow
 {
+	import fr.mazerte.controls.openflow.seek.ISeeker;
 	import fr.mazerte.controls.openflow.core.OpenFlowBase;
 	import fr.mazerte.controls.openflow.env.IEnv;
 	import fr.mazerte.controls.openflow.layout.ILayout;
 	
 	public class OpenFlow extends OpenFlowBase
 	{
-		public function OpenFlow(data:Array=null, itemRenderer:Class=null, env:IEnv=null, layout:ILayout=null, interpolators:Array=null)
+		public function OpenFlow(data:Array=null, itemRenderer:Class=null, env:IEnv=null, layout:ILayout=null, interpolators:Array=null, seeker:ISeeker = null)
 		{
-			super(data, itemRenderer, env, layout, interpolators);
+			super(data, itemRenderer, env, layout, interpolators, seeker);
 		}
 	}
 }

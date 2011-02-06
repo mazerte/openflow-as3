@@ -14,10 +14,11 @@ package fr.mazerte.controls.openflow.utils.eaze
 	
 	import flash.display.Sprite;
 	import flash.geom.Matrix3D;
+	import flash.utils.getDefinitionByName;
 	
 	import fr.mazerte.controls.openflow.utils.AbstractMatrix3D;
-	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Flash3DAdapter;
 	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Away3DAdapter;
+	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Flash3DAdapter;
 	import fr.mazerte.controls.openflow.utils.eaze.transform3D.PapervisionAdapter;
 	
 	import org.papervision3d.core.math.Matrix3D;
@@ -36,18 +37,21 @@ package fr.mazerte.controls.openflow.utils.eaze
 		{
 			super(target, property, value, next);
 			
-			switch(true)
+			var klass:Class;
+			switch(getQualifiedClassName(value))
 			{
-				case value is MatrixAway3D: // Away3D
-					_adapter = new Away3DAdapter(target, property, value, next);
+				case "away3d.core.math::MatrixAway3D": // Away3D
+					klass = getDefinitionByName("fr.mazerte.controls.openflow.utils.eaze.transform3D::Away3DAdapter") as Class;
 					break;
-				case value is flash.geom.Matrix3D: // Flash
-					_adapter = new Flash3DAdapter(target, property, value, next);
+				case "flash.geom::Matrix3D": // Flash
+					klass = getDefinitionByName("fr.mazerte.controls.openflow.utils.eaze.transform3D::Flash3DAdapter") as Class;
 					break;
-				case value is org.papervision3d.core.math.Matrix3D: // Papervision
-					_adapter = new PapervisionAdapter(target, property, value, next);
+				case "org.papervision3d.core.math.Matrix3D": // Papervision
+					klass = getDefinitionByName("fr.mazerte.controls.openflow.utils.eaze.transform3D::PapervisionAdapter") as Class;
 					break;
 			}
+			if(klass)
+				_adapter = new klass(target, property, value, next);
 		}
 		
 		override public function init(reverse:Boolean):void 

@@ -39,18 +39,18 @@ package fr.mazerte.controls.openflow.layout
 			_length = len;
 		}
 		
-		private var _angleX:int = 0;
-		private var _angleY:int = 65;
-		private var _angleZ:int = 0;
-		private var _offsetX:int = 75;
-		private var _offsetY:int = 0;
-		private var _offsetZ:int = 0;
-		private var _gapX:int = 300;
-		private var _gapY:int = 0;
-		private var _gapZ:int = 300;
-		private var _powerX:int = 1;
-		private var _powerY:int = 2;
-		private var _powerZ:int = 1;
+		protected var _angleX:int = 0;
+		protected var _angleY:int = 65;
+		protected var _angleZ:int = 0;
+		protected var _offsetX:int = 75;
+		protected var _offsetY:int = 0;
+		protected var _offsetZ:int = 0;
+		protected var _gapX:int = 300;
+		protected var _gapY:int = 0;
+		protected var _gapZ:int = 300;
+		protected var _powerX:int = 1;
+		protected var _powerY:int = 2;
+		protected var _powerZ:int = 1;
 		
 		public function getPostion(index:int, seek:Number):AbstractMatrix3D
 		{

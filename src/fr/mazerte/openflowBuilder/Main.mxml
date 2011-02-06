@@ -148,6 +148,8 @@
 			<fx:Object label="AppleHorizontalLayout" 	layout="{appleHLayout}" 	state="1" />
 			<fx:Object label="AppleVerticalLayout" 		layout="{appleVLayout}" 	state="2" />
 			<fx:Object label="CercularLayout" 			layout="{cercularLayout}" 	state="3" />
+			<fx:Object label="CircleOutLayout" 			layout="{circleOutLayout}" 	state="4" />
+			<fx:Object label="CircleInLayout" 			layout="{circleInLayout}" 	state="5" />
 		</s:ArrayList>
 		<layout:DefaultLayout id="defaultLayout"
 			angleX="{sDefaultLayoutAngleX.value}" 	angleY="{sDefaultLayoutAngleY.value}" 	angleZ="{sDefaultLayoutAngleZ.value}" 
@@ -172,6 +174,12 @@
 			rotationX="{sCercularLayoutRotationX.value}" 				rotationY="{sCercularLayoutRotationY.value}" 					rotationZ="{sCercularLayoutRotationZ.value}" 
 			globalRotationX="{sCercularLayoutGlobalRotationX.value}" 	globalRotationY="{sCercularLayoutGlobalRotationY.value}" 	globalRotationZ="{sCercularLayoutGlobalRotationZ.value}" 
 			offsetRotationX="{sCercularLayoutOffsetRotationX.value}" 	offsetRotationY="{sCercularLayoutOffsetRotationY.value}" 	offsetRotationZ="{sCercularLayoutOffsetRotationZ.value}"
+		/>
+		<layout:CircleOutLayout id="circleOutLayout"
+			gap="{sCircleOutLayoutGap.value}"
+		/>
+		<layout:CircleInLayout id="circleInLayout"
+			gap="{sCircleInLayoutGap.value}"
 		/>
 		
 		<!-- INTERPOLATORS -->
@@ -359,6 +367,26 @@
 								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetRotationX" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutOffsetRotationX" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetRotationX.value}" width="50" /></s:HGroup>
 								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetRotationY" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutOffsetRotationY" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetRotationY.value}" width="50" /></s:HGroup>
 								<s:HGroup verticalAlign="middle"><mx:Slider id="sCercularLayoutOffsetRotationZ" value="0" minimum="-180" maximum="180" height="20" /><s:NumericStepper id="nCercularLayoutOffsetRotationZ" stepSize=".1" minimum="-1000" maximum="1000" value="@{sCercularLayoutOffsetRotationZ.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+					<!-- CircleOutLayout -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- GAP -->
+							<s:VGroup>
+								<s:Label text="GAP" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCircleOutLayoutGap" value="500" minimum="0" maximum="2000" height="20" /><s:NumericStepper id="nCircleOutLayoutGap" stepSize="1" minimum="0" maximum="2000" value="@{sCircleOutLayoutGap.value}" width="50" /></s:HGroup>
+							</s:VGroup>
+						</s:HGroup>
+					</mx:Canvas>
+					<!-- CircleInLayout -->
+					<mx:Canvas width="100%" height="100%">
+						<s:HGroup top="0" left="0" right="0" bottom="0">
+							<!-- GAP -->
+							<s:VGroup>
+								<s:Label text="GAP" />
+								<s:HGroup verticalAlign="middle"><mx:Slider id="sCircleInLayoutGap" value="500" minimum="0" maximum="2000" height="20" /><s:NumericStepper id="nCircleInLayoutGap" stepSize="1" minimum="0" maximum="2000" value="@{sCircleInLayoutGap.value}" width="50" /></s:HGroup>
 							</s:VGroup>
 						</s:HGroup>
 					</mx:Canvas>

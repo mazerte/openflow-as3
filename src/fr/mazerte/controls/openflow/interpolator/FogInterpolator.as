@@ -14,15 +14,15 @@ package fr.mazerte.controls.openflow.interpolator
 	
 	public class FogInterpolator implements fr.mazerte.controls.openflow.interpolator.IInterpolator
 	{		
-		private var _env:String;
+		protected var _env:String;
 		
 		protected var _length:int;
 		protected var _width:Number;
 		protected var _height:Number;
 		
-		private var _duration:Number = .5;
+		protected var _duration:Number = .5;
 		
-		private var _fogDistance:Number = 901;
+		protected var _fogDistance:Number = 901;
 		
 		public function FogInterpolator()
 		{
