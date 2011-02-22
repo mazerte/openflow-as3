@@ -68,6 +68,11 @@ package fr.mazerte.controls.openflow.interpolator
 			return _duration;
 		}
 		
+		public function overInterpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number
+		{
+			return 0;
+		}
+		
 		public function interpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number
 		{
 			item = _resoveItemType(item);	

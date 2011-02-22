@@ -236,6 +236,24 @@ package fr.mazerte.controls.openflow.core
 			return _env;
 		}
 		
+		public function set env(e:IEnv):void
+		{
+			_clearUI();
+			_env.removeEventListener(EnvEvent.SEEK, _envSeekHandler);
+			_env.dispose();
+			removeChild(_env as Sprite);
+			
+			_env = e;
+			_env.init(_layout, _interpolators);
+			_env.resize(_width, _height);
+			_env.addEventListener(EnvEvent.SEEK, _envSeekHandler);
+			addChild(_env as Sprite);
+			
+			_drawUI();
+			
+			setSeek(_seek, false);
+		}
+		
 		public function get layout():ILayout
 		{
 			return _layout;

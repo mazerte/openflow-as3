@@ -56,6 +56,14 @@ package fr.mazerte.controls.openflow.interpolator
 			return _duration;
 		}
 		
+		public function overInterpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number
+		{
+			eaze(item)
+			.easing(Quadratic.easeOut)
+				.to(_duration, { transform3D:transform }, false);
+			return _duration;
+		}
+		
 		public function interpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number
 		{
 			eaze(item).apply({ transform3D:transform });

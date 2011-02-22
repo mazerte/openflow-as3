@@ -127,6 +127,8 @@ package fr.mazerte.controls.openflow.mxml
 		public function set env(e:IEnv):void
 		{
 			_env = e;
+			if(_base)
+				_base.env = e;
 			dispatchEvent(new Event(Event.CHANGE));
 		}
 		

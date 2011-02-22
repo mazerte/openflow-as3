@@ -21,6 +21,7 @@ package fr.mazerte.controls.openflow.env
 	
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
 	import fr.mazerte.controls.openflow.interpolator.IInterpolator;
@@ -29,6 +30,8 @@ package fr.mazerte.controls.openflow.env
 	import fr.mazerte.controls.openflow.utils.AbstractMatrix3D;
 	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Away3DAdapter;
 	
+	import mx.utils.ArrayUtil;
+	
 	public class Away3DEnv extends Sprite implements IEnv
 	{
 		protected static const _CAMERA_INIT_ZOOM:Number = 10;
@@ -36,7 +39,9 @@ package fr.mazerte.controls.openflow.env
 		
 		protected static const _CAMERA_INIT_POS_X:Number = 0;
 		protected static const _CAMERA_INIT_POS_Y:Number = 0;
-		protected static const _CAMERA_INIT_POS_Z:Number = -900;
+		protected static const _CAMERA_INIT_POS_Z:Number = -1000;
+		
+		protected var _seek:Number = 0;
 		
 		protected var _view:View3D;
 		protected var _camera:Camera3D;
@@ -47,16 +52,21 @@ package fr.mazerte.controls.openflow.env
 		
 		protected var _coverflowContainer:ObjectContainer3D;
 		protected var _coverflowContainerChildren:Array;
+		protected var _coverflowContainerChildrenDict:Dictionary;
 		
 		protected var _width:Number = 0;
 		protected var _height:Number = 0;
 		
-		public var clickToMove:Boolean = true
+		public var clickToMove:Boolean = true;
+		public var useOverAnimation:Boolean = true;
 		
-		public function Away3DEnv(pClickToMove:Boolean = true)
+		public function Away3DEnv(pClickToMove:Boolean = true, pUseOverAnimation:Boolean = true)
 		{
 			clickToMove = pClickToMove;
+			useOverAnimation = pUseOverAnimation;
+			
 			_coverflowContainerChildren = [];
+			_coverflowContainerChildrenDict = new Dictionary();
 			
 			Away3DAdapter.register();
 		}
@@ -97,7 +107,7 @@ package fr.mazerte.controls.openflow.env
 			
 			_coverflowContainer = new ObjectContainer3D();
 			_coverflowContainer.y = 0;
-			_coverflowContainer.ownCanvas = true;
+			//_coverflowContainer.ownCanvas = true;
 			_scene.addChild(_coverflowContainer);
 			
 			_coverflowContainerChildren = [];
@@ -148,7 +158,7 @@ package fr.mazerte.controls.openflow.env
 		public function addItem(item:IItemRenderer, seek:Number, index:int, withAnim:Boolean = true):void
 		{
 			var m:MovieMaterial = new MovieMaterial(item as Sprite, {
-				interactive:  false,
+				interactive:  true,
 				smooth:       true,
 				lockW:        Sprite(item).width,
 				lockH:        Sprite(item).height
@@ -164,6 +174,8 @@ package fr.mazerte.controls.openflow.env
 			
 			p.addEventListener(MouseEvent3D.MOUSE_DOWN, _itemMouseDownHandler);
 			p.addEventListener(MouseEvent3D.MOUSE_UP, _itemMouseUpHandler);
+			p.addEventListener(MouseEvent3D.MOUSE_OVER, _itemMouseOverHandler);
+			p.addEventListener(MouseEvent3D.MOUSE_OUT, _itemMouseOutHandler);
 			
 			var position:AbstractMatrix3D = _layout.getPostion(index, seek)
 			for each(var interpolator:IInterpolator in _interpolators)
@@ -175,6 +187,7 @@ package fr.mazerte.controls.openflow.env
 			}
 			
 			_coverflowContainerChildren.splice(index, 0, p);
+			_coverflowContainerChildrenDict[p] = item;
 			_coverflowContainer.addChild(p);
 		}
 		
@@ -184,6 +197,9 @@ package fr.mazerte.controls.openflow.env
 			{
 				if(MovieMaterial(Mesh(_coverflowContainerChildren[i]).material).movie == item)
 				{
+					Mesh(_coverflowContainerChildren[i]).removeEventListener(MouseEvent3D.MOUSE_DOWN, _itemMouseDownHandler);
+					Mesh(_coverflowContainerChildren[i]).removeEventListener(MouseEvent3D.MOUSE_UP, _itemMouseUpHandler);
+					
 					if(withAnim)
 					{
 						var duration:Number = 0;
@@ -200,13 +216,14 @@ package fr.mazerte.controls.openflow.env
 								_coverflowContainer.removeChild(item);
 							}, duration * 1000, _coverflowContainerChildren[i]
 						);
-						_coverflowContainerChildren.splice(i, 1);
 					}
 					else
 					{
 						_coverflowContainer.removeChild(_coverflowContainerChildren[i] as Mesh);
-						_coverflowContainerChildren.splice(i, 1);
 					}
+					
+					delete _coverflowContainerChildrenDict[_coverflowContainerChildren[i]];
+					_coverflowContainerChildren.splice(i, 1);
 				}
 			}
 		}
@@ -214,7 +231,11 @@ package fr.mazerte.controls.openflow.env
 		
 		public function setSeek(seek:Number, withAnim:Boolean = true):void
 		{
-			_itemMouseDown = false;
+			//_itemMouseDown = false;
+			_seek = seek;
+			
+			if(!_coverflowContainerChildren || _coverflowContainerChildren.length < 1)
+				return;
 			
 			var item:Mesh;
 			for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
@@ -234,7 +255,8 @@ package fr.mazerte.controls.openflow.env
 			if(seek == Math.round(seek))
 			{
 				item = _coverflowContainerChildren[seek] as Mesh;
-				MovieMaterial(item.material).interactive = true;
+				if(item)
+					MovieMaterial(item.material).interactive = true;
 			}
 		}
 		
@@ -264,6 +286,40 @@ package fr.mazerte.controls.openflow.env
 					item = _coverflowContainerChildren[i] as Mesh;
 					if(item ==  event.currentTarget)
 						dispatchEvent(new EnvEvent(EnvEvent.SEEK, i));
+				}
+			}
+			
+			_itemMouseDown = false;
+		}
+		
+		private function _itemMouseOverHandler(event:MouseEvent3D):void
+		{
+			if(!_coverflowContainerChildrenDict[event.currentTarget])
+				return;
+			
+			IItemRenderer(_coverflowContainerChildrenDict[event.currentTarget]).rollOver();
+			if(useOverAnimation)
+			{
+				var index:int = ArrayUtil.getItemIndex(event.currentTarget, _coverflowContainerChildren);
+				for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
+				{
+					for each(var interpolator:IInterpolator in _interpolators)
+						interpolator.overInterpolationItem(_coverflowContainerChildren[i], _layout.getRollOverPostion(i, _seek, index), i, _seek);
+				}
+			}
+		}
+		
+		private function _itemMouseOutHandler(event:MouseEvent3D):void
+		{
+			_itemMouseDown = false;
+			
+			IItemRenderer(_coverflowContainerChildrenDict[event.currentTarget]).rollOver();
+			if(useOverAnimation)
+			{
+				for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
+				{
+					for each(var interpolator:IInterpolator in _interpolators)
+						interpolator.moveInterpolationItem(_coverflowContainerChildren[i], _layout.getPostion(i, _seek), i, _seek);
 				}
 			}
 		}
@@ -308,6 +364,9 @@ package fr.mazerte.controls.openflow.env
 		public function dispose():void
 		{
 			removeEventListener(Event.REMOVED_FROM_STAGE, _removedToStageHandler);
+			stage.removeEventListener(Event.ENTER_FRAME, _enterFrameHandler);
+			
+			removeChild(_view);
 			
 			_view = null;
 			_camera = null;
@@ -320,10 +379,12 @@ package fr.mazerte.controls.openflow.env
 			{
 				p.removeEventListener(MouseEvent3D.MOUSE_DOWN, _itemMouseDownHandler);
 				p.removeEventListener(MouseEvent3D.MOUSE_UP, _itemMouseUpHandler);
-				IItemRenderer(MovieMaterial(p.material).movie).dispose();
+				IItemRenderer(_coverflowContainerChildren[p]).dispose();
 				_coverflowContainer.removeChild(p);
 			}
-			_coverflowContainer = null;
+			
+			_coverflowContainerChildren = [];
+			_coverflowContainerChildrenDict = new Dictionary();
 			
 			_coverflowContainerChildren = null;
 		}

@@ -94,6 +94,11 @@ package fr.mazerte.controls.openflow.layout
 			return matrix;
 		}
 		
+		public function getRollOverPostion(index:int, seek:Number, rollIndex:int):AbstractMatrix3D
+		{
+			return this.getPostion(index, seek);
+		}
+		
 		public function get angle():Number
 		{
 			return _angleY;

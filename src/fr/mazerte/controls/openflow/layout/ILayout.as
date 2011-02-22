@@ -17,6 +17,7 @@ package fr.mazerte.controls.openflow.layout
 		function setSize(width:Number, height:Number):void;
 		function setLength(len:int):void;
 		function getPostion(index:int, seek:Number):AbstractMatrix3D;
+		function getRollOverPostion(index:int, seek:Number, rollIndex:int):AbstractMatrix3D;
 		function dispose():void;
 	}
 }

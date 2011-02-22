@@ -6,6 +6,8 @@ CopyRight: 2010
 */
 package fr.mazerte.controls.openflow.itemRenderer
 {
+	import aze.motion.eaze;
+	
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Rectangle;
@@ -20,9 +22,44 @@ package fr.mazerte.controls.openflow.itemRenderer
 		private var _index:int;
 		private var _data:*;
 		
+		private var _ball:Sprite;
+		
 		public function DefaultItemRenderer()
 		{
+			_ball = new Sprite();
+			_ball.addEventListener(MouseEvent.MOUSE_OVER, _ballMouseOverHandler);
+			_ball.addEventListener(MouseEvent.MOUSE_OUT, _ballMouseOutHandler);
+			addChild(_ball);
+			
 			_draw();
+			
+			_anim();
+		}
+		
+		private function _anim():void
+		{
+			eaze(_ball).apply({x: (_WIDTH / 2) - 100, y: (_HEIGHT / 2) - 100})
+				.to(5,{x: (_WIDTH / 2) + 100, y: (_HEIGHT / 2) - 100})
+				.to(5,{x: (_WIDTH / 2) + 100, y: (_HEIGHT / 2) + 100})
+				.to(5,{x: (_WIDTH / 2) - 100, y: (_HEIGHT / 2) + 100})
+				.to(5,{x: (_WIDTH / 2) - 100, y: (_HEIGHT / 2) - 100})
+				.onComplete(_anim);
+		}
+		
+		private function _ballMouseOverHandler(event:MouseEvent):void
+		{
+			_ball.graphics.clear();
+			_ball.graphics.beginFill(0x000000, _ALPHA);
+			_ball.graphics.drawEllipse(0, 0, 40, 40);
+			_ball.graphics.endFill();
+		}
+		
+		private function _ballMouseOutHandler(event:MouseEvent):void
+		{
+			_ball.graphics.clear();
+			_ball.graphics.beginFill(0x0000FF, _ALPHA);
+			_ball.graphics.drawEllipse(0, 0, 40, 40);
+			_ball.graphics.endFill();
 		}
 		
 		private function _draw():void
@@ -42,6 +79,11 @@ package fr.mazerte.controls.openflow.itemRenderer
 			
 			graphics.moveTo(0, _HEIGHT);
 			graphics.lineTo(_WIDTH, 0);
+			
+			_ball.graphics.clear();
+			_ball.graphics.beginFill(0x0000FF, _ALPHA);
+			_ball.graphics.drawEllipse(0, 0, 40, 40);
+			_ball.graphics.endFill();
 			
 			addEventListener(MouseEvent.CLICK, _clickHandler);
 		}
@@ -71,6 +113,16 @@ package fr.mazerte.controls.openflow.itemRenderer
 			//trace('focusOut: ' + _index);
 		}
 		
+		public function rollOver():void
+		{
+			trace('rollOver: ' + _index);
+		}
+		
+		public function rollOut():void
+		{
+			trace('rollOut: ' + _index);
+		}
+		
 		private function _clickHandler(event:MouseEvent):void
 		{
 			trace('click: ' + _index);
@@ -78,6 +130,9 @@ package fr.mazerte.controls.openflow.itemRenderer
 		
 		public function dispose():void
 		{			
+			_ball.removeEventListener(MouseEvent.MOUSE_OVER, _ballMouseOverHandler);
+			_ball.removeEventListener(MouseEvent.MOUSE_OUT, _ballMouseOutHandler);
+			
 			removeEventListener(MouseEvent.CLICK, _clickHandler);
 		}
 	}

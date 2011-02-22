@@ -10,6 +10,7 @@ package fr.mazerte.controls.openflow.env
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix3D;
+	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
 	import fr.mazerte.controls.openflow.interpolator.IInterpolator;
@@ -18,22 +19,29 @@ package fr.mazerte.controls.openflow.env
 	import fr.mazerte.controls.openflow.utils.AbstractMatrix3D;
 	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Flash3DAdapter;
 	
+	import mx.utils.ArrayUtil;
+	
 	public class FlashEnv extends Sprite implements IEnv
 	{
 		protected var _layout:ILayout;
 		protected var _interpolators:Array;
 		
+		protected var _seek:Number = 0;
+		
 		protected var _items:Array;
+		protected var _itemsDict:Dictionary;
 		public var _container:Sprite;
 		
 		protected var _width:Number = 0;
 		protected var _height:Number = 0;
 		
-		public var clickToMove:Boolean = true
+		public var clickToMove:Boolean = true;
+		public var useOverAnimation:Boolean = true;
 		
-		public function FlashEnv(pClickToMove:Boolean = true)
+		public function FlashEnv(pClickToMove:Boolean = true, pUseOverAnimation:Boolean = true)
 		{
 			clickToMove = pClickToMove;
+			useOverAnimation = pUseOverAnimation;
 			
 			Flash3DAdapter.register();
 		}
@@ -44,6 +52,7 @@ package fr.mazerte.controls.openflow.env
 			_interpolators = interpolators;
 			
 			_items = [];
+			_itemsDict = new Dictionary();
 			
 			_container = new Sprite();			
 			addChild(_container);
@@ -56,7 +65,7 @@ package fr.mazerte.controls.openflow.env
 			var item:IItemRenderer;
 			for each(var s:Sprite in _items)
 			{
-				item = s.getChildAt(0) as IItemRenderer;
+				item = _itemsDict[s] as IItemRenderer;
 				Sprite(item).x = - (Sprite(item).width / 2);
 				Sprite(item).y = - (Sprite(item).height / 2); 
 			}
@@ -79,9 +88,12 @@ package fr.mazerte.controls.openflow.env
 			}
 			
 			itemContainer.addEventListener(MouseEvent.CLICK, _itemClickHandler);
+			itemContainer.addEventListener(MouseEvent.MOUSE_OVER, _itemMouseOverHandler);
+			itemContainer.addEventListener(MouseEvent.MOUSE_OUT, _itemMouseOutHandler);
 			itemContainer.addEventListener(MouseEvent.MOUSE_DOWN, _itemMouseDownHandler);
 			
 			_items.splice(index, 0, itemContainer);
+			_itemsDict[itemContainer] = item;
 			_container.addChild(itemContainer);
 		}
 		
@@ -89,8 +101,13 @@ package fr.mazerte.controls.openflow.env
 		{
 			for(var i:uint = 0; i < _items.length; i++)
 			{
-				if(Sprite(_items[i]).getChildAt(0) == item)
-				{
+				if(_itemsDict[_items[i]] == item)
+				{			
+					Sprite(_items[i]).removeEventListener(MouseEvent.CLICK, _itemClickHandler);
+					Sprite(_items[i]).removeEventListener(MouseEvent.MOUSE_OVER, _itemMouseOverHandler);
+					Sprite(_items[i]).removeEventListener(MouseEvent.MOUSE_OUT, _itemMouseOutHandler);
+					Sprite(_items[i]).removeEventListener(MouseEvent.MOUSE_DOWN, _itemMouseDownHandler);
+					
 					if(withAnim)
 					{
 						var duration:Number = 0;
@@ -101,20 +118,20 @@ package fr.mazerte.controls.openflow.env
 							duration = (tmpDuration > duration) ? tmpDuration : duration;
 						}
 						
-						Sprite(_items[i]).removeEventListener(MouseEvent.CLICK, _itemClickHandler);
 						setTimeout(
 							function(item:Sprite):void
 							{
 								_container.removeChild(item);
 							}, duration * 1000, _items[i]
 						);
-						_items.splice(i, 1);
 					}
 					else
 					{
 						_container.removeChild(_items[i] as Sprite);
-						_items.splice(i, 1);
 					}
+					
+					delete _itemsDict[_items[i]];
+					_items.splice(i, 1);
 				}
 			}
 		}
@@ -123,6 +140,11 @@ package fr.mazerte.controls.openflow.env
 		
 		public function setSeek(seek:Number, withAnim:Boolean=true):void
 		{
+			_seek = seek;
+			
+			if(!_items || _items.length < 1)
+				return;
+			
 			_isSeeked = true;
 			var item:Sprite;
 			for(var i:uint = 0; i < _items.length; i++)
@@ -191,6 +213,39 @@ package fr.mazerte.controls.openflow.env
 			}
 		}
 		
+		private function _itemMouseOverHandler(event:MouseEvent):void
+		{
+			if(!_itemsDict[event.target])
+				return;
+			
+			IItemRenderer(_itemsDict[event.target]).rollOver();
+			if(useOverAnimation)
+			{
+				var index:int = ArrayUtil.getItemIndex(event.target, _items);
+				for(var i:uint = 0; i < _items.length; i++)
+				{
+					for each(var interpolator:IInterpolator in _interpolators)
+						interpolator.overInterpolationItem(_items[i], _layout.getRollOverPostion(i, _seek, index), i, _seek);
+				}
+			}
+		}
+		
+		private function _itemMouseOutHandler(event:MouseEvent):void
+		{
+			if(!_itemsDict[event.target])
+				return;
+			
+			IItemRenderer(_itemsDict[event.target]).rollOut();
+			if(useOverAnimation)
+			{
+				for(var i:uint = 0; i < _items.length; i++)
+				{
+					for each(var interpolator:IInterpolator in _interpolators)
+						interpolator.moveInterpolationItem(_items[i], _layout.getPostion(i, _seek), i, _seek);
+				}
+			}
+		}
+		
 		private function _itemMouseDownHandler(event:MouseEvent):void
 		{
 			_isSeeked = false;
@@ -224,8 +279,9 @@ package fr.mazerte.controls.openflow.env
 			_interpolators = null;
 			
 			for each(var item:Sprite in _items)
-				IItemRenderer(item.getChildAt(0)).dispose();
+				IItemRenderer(_itemsDict[item]).dispose();
 			_items = null;
+			_itemsDict = null;
 			
 			while(_container.numChildren > 0)
 				_container.removeChildAt(0)

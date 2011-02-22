@@ -5,24 +5,16 @@ License: http://www.opensource.org/licenses/mit-license.php
 CopyRight: 2010
 */
 package fr.mazerte.controls.openflow.utils.eaze
-{
-	import away3d.core.base.Object3D;
-	import away3d.core.math.MatrixAway3D;
-	
+{	
 	import aze.motion.EazeTween;
 	import aze.motion.specials.EazeSpecial;
 	
 	import flash.display.Sprite;
 	import flash.geom.Matrix3D;
 	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
 	
 	import fr.mazerte.controls.openflow.utils.AbstractMatrix3D;
-	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Away3DAdapter;
-	import fr.mazerte.controls.openflow.utils.eaze.transform3D.Flash3DAdapter;
-	import fr.mazerte.controls.openflow.utils.eaze.transform3D.PapervisionAdapter;
-	
-	import org.papervision3d.core.math.Matrix3D;
-	import org.papervision3d.objects.DisplayObject3D;
 	
 	public class PropertyTransform3D extends EazeSpecial
 	{

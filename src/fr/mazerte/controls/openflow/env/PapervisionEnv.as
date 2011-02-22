@@ -4,6 +4,7 @@ package fr.mazerte.controls.openflow.env
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Rectangle;
+	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
 	import fr.mazerte.controls.openflow.interpolator.IInterpolator;
@@ -12,8 +13,11 @@ package fr.mazerte.controls.openflow.env
 	import fr.mazerte.controls.openflow.utils.AbstractMatrix3D;
 	import fr.mazerte.controls.openflow.utils.eaze.transform3D.PapervisionAdapter;
 	
+	import mx.utils.ArrayUtil;
+	
 	import org.papervision3d.cameras.Camera3D;
 	import org.papervision3d.core.proto.DisplayObjectContainer3D;
+	import org.papervision3d.events.InteractiveScene3DEvent;
 	import org.papervision3d.materials.ColorMaterial;
 	import org.papervision3d.materials.MovieMaterial;
 	import org.papervision3d.objects.DisplayObject3D;
@@ -32,18 +36,25 @@ package fr.mazerte.controls.openflow.env
 		private var _scene:Scene3D;
 		private var _renderEngine:LazyRenderEngine;
 		
+		protected var _seek:Number = 0;
+		
 		protected var _coverflowContainer:DisplayObject3D;
 		protected var _coverflowContainerChildren:Array;
+		protected var _coverflowContainerChildrenDict:Dictionary;
 		
 		protected var _width:Number = 0;
 		protected var _height:Number = 0;
 		
-		public var clickToMove:Boolean = true
+		public var clickToMove:Boolean = true;
+		public var useOverAnimation:Boolean = true;
 		
-		public function PapervisionEnv(pClickToMove:Boolean = true)
+		public function PapervisionEnv(pClickToMove:Boolean = true, pUseOverAnimation:Boolean = true)
 		{
 			clickToMove = pClickToMove;
+			useOverAnimation = pUseOverAnimation;
+			
 			_coverflowContainerChildren = [];
+			_coverflowContainerChildrenDict = new Dictionary();
 			
 			PapervisionAdapter.register();
 		}
@@ -138,8 +149,10 @@ package fr.mazerte.controls.openflow.env
 			m.smooth = true;
 			m.interactive = true;
 			
+			Sprite(item).mouseChildren = false;
+			
 			var p:Plane = new Plane(
-				m, 
+				m,
 				Sprite(item).width,  
 				Sprite(item).height, 
 				1, 
@@ -147,8 +160,10 @@ package fr.mazerte.controls.openflow.env
 			);
 			p.useOwnContainer = true;
 			
-			p.addEventListener(MouseEvent.MOUSE_DOWN, _itemMouseDownHandler);
-			p.addEventListener(MouseEvent.MOUSE_UP, _itemMouseUpHandler);
+			p.addEventListener(InteractiveScene3DEvent.OBJECT_PRESS, _itemMouseDownHandler);
+			p.addEventListener(InteractiveScene3DEvent.OBJECT_RELEASE, _itemMouseUpHandler);
+			p.addEventListener(InteractiveScene3DEvent.OBJECT_OVER, _itemMouseOverHandler);
+			p.addEventListener(InteractiveScene3DEvent.OBJECT_OUT, _itemMouseOutHandler);
 			
 			var position:AbstractMatrix3D = _layout.getPostion(index, seek);
 			for each(var interpolator:IInterpolator in _interpolators)
@@ -160,6 +175,7 @@ package fr.mazerte.controls.openflow.env
 			}
 			
 			_coverflowContainerChildren.splice(index, 0, p);
+			_coverflowContainerChildrenDict[p] = item;
 			_coverflowContainer.addChild(p);
 		}
 		
@@ -169,6 +185,11 @@ package fr.mazerte.controls.openflow.env
 			{
 				if(MovieMaterial(Plane(_coverflowContainerChildren[i]).material).movie == item)
 				{
+					Plane(_coverflowContainerChildren[i]).removeEventListener(InteractiveScene3DEvent.OBJECT_PRESS, _itemMouseDownHandler);
+					Plane(_coverflowContainerChildren[i]).removeEventListener(InteractiveScene3DEvent.OBJECT_RELEASE, _itemMouseUpHandler);
+					Plane(_coverflowContainerChildren[i]).removeEventListener(InteractiveScene3DEvent.OBJECT_OVER, _itemMouseOverHandler);
+					Plane(_coverflowContainerChildren[i]).removeEventListener(InteractiveScene3DEvent.OBJECT_OUT, _itemMouseOutHandler);
+					
 					if(withAnim)
 					{
 						var duration:Number = 0;
@@ -185,24 +206,31 @@ package fr.mazerte.controls.openflow.env
 								_coverflowContainer.removeChild(item);
 							}, duration * 1000, _coverflowContainerChildren[i]
 						);
-						_coverflowContainerChildren.splice(i, 1);
 					}
 					else
 					{
 						_coverflowContainer.removeChild(_coverflowContainerChildren[i] as Plane);
-						_coverflowContainerChildren.splice(i, 1);
 					}
+					
+					delete _coverflowContainerChildrenDict[_coverflowContainerChildren[i]];
+					_coverflowContainerChildren.splice(i, 1);
 				}
 			}
 		}
 		
 		public function setSeek(seek:Number, withAnim:Boolean=true):void
 		{
+			_seek = seek;
+			
+			if(!_coverflowContainerChildren || _coverflowContainerChildren.length < 1)
+				return;
+			
 			var item:Plane;
 			for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
 			{
 				item = _coverflowContainerChildren[i] as Plane;
-				MovieMaterial(item.material).interactive = false;
+				//MovieMaterial(item.material).interactive = false;
+				Sprite(_coverflowContainerChildrenDict[item]).mouseChildren = false;
 				var position:AbstractMatrix3D = _layout.getPostion(i, seek);
 				for each(var interpolator:IInterpolator in _interpolators)
 				{
@@ -216,36 +244,68 @@ package fr.mazerte.controls.openflow.env
 			if(seek == Math.round(seek))
 			{
 				item = _coverflowContainerChildren[seek] as Plane;
-				MovieMaterial(item.material).interactive = true;
+				if(item)
+				{
+					//MovieMaterial(item.material).interactive = true;
+					Sprite(_coverflowContainerChildrenDict[item]).mouseChildren = true;
+				}
 			}
+			
 		}
 		
 		
-		private var _item:Plane;
 		private var _itemMouseDown:Boolean = false;
 		
-		private function _itemMouseDownHandler(event:MouseEvent):void
+		private function _itemMouseDownHandler(event:InteractiveScene3DEvent):void
 		{
-			if(!clickToMove)
-				return;
-			
-			_item = event.currentTarget as Plane;
 			_itemMouseDown = true;
 		}
 		
-		private function _itemMouseUpHandler(event:MouseEvent):void
+		private function _itemMouseUpHandler(event:InteractiveScene3DEvent):void
 		{
-			if(!clickToMove)
+			if(!clickToMove || !_itemMouseDown)
 				return;
 			
-			if(_item && _item == event.currentTarget && _itemMouseDown)
+			for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
 			{
-				var item:Plane;
+				if(event.displayObject3D == _coverflowContainerChildren[i])
+					dispatchEvent(new EnvEvent(EnvEvent.SEEK, i));					
+			}
+			
+			_itemMouseDown = false;
+		}
+		
+		private function _itemMouseOverHandler(event:InteractiveScene3DEvent):void
+		{
+			if(!_coverflowContainerChildrenDict[event.displayObject3D])
+				return;
+			
+			IItemRenderer(_coverflowContainerChildrenDict[event.displayObject3D]).rollOver();
+			if(useOverAnimation)
+			{
+				var index:int = ArrayUtil.getItemIndex(event.displayObject3D, _coverflowContainerChildren);
 				for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
 				{
-					item = _coverflowContainerChildren[i] as Plane;
-					if(item ==  event.currentTarget)
-						dispatchEvent(new EnvEvent(EnvEvent.SEEK, i));
+					for each(var interpolator:IInterpolator in _interpolators)
+						interpolator.overInterpolationItem(_coverflowContainerChildren[i], _layout.getRollOverPostion(i, _seek, index), i, _seek);
+				}
+			}
+		}
+		
+		private function _itemMouseOutHandler(event:InteractiveScene3DEvent):void
+		{
+			_itemMouseDown = false;
+			
+			if(!_coverflowContainerChildrenDict[event.displayObject3D])
+				return;
+			
+			IItemRenderer(_coverflowContainerChildrenDict[event.displayObject3D]).rollOver();
+			if(useOverAnimation)
+			{
+				for(var i:uint = 0; i < _coverflowContainerChildren.length; i++)
+				{
+					for each(var interpolator:IInterpolator in _interpolators)
+						interpolator.moveInterpolationItem(_coverflowContainerChildren[i], _layout.getPostion(i, _seek), i, _seek);
 				}
 			}
 		}
@@ -289,6 +349,29 @@ package fr.mazerte.controls.openflow.env
 		
 		public function dispose():void
 		{
+			removeEventListener(Event.REMOVED_FROM_STAGE, _removedToStageHandler);
+			stage.removeEventListener(Event.ENTER_FRAME, _enterFrameHandler);
+			
+			_layout = null;
+			_interpolators = null;
+			
+			removeChild(_viewport);
+			
+			_viewport = null;
+			_camera = null;
+			_scene = null;
+			_renderEngine = null;
+			
+			for each(var p:Plane in _coverflowContainer.children as Dictionary)
+			{
+				IItemRenderer(_coverflowContainerChildren[p]).dispose();
+				_coverflowContainer.removeChild(p);
+			}
+						
+			_coverflowContainerChildren = [];
+			_coverflowContainerChildrenDict = new Dictionary();
+			
+			_coverflowContainer = null;
 		}
 	}
 }

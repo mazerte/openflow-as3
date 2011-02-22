@@ -44,16 +44,6 @@ package fr.mazerte.controls.openflow.itemRenderer
 			_draw();
 		}
 		
-		public function get index():int
-		{
-			return _index;
-		}
-		
-		public function set index(i:int):void
-		{
-			_index = i;
-		}
-		
 		public function focusIn():void 
 		{
 			//trace('focusIn: ' + _index);
@@ -62,6 +52,16 @@ package fr.mazerte.controls.openflow.itemRenderer
 		public function focusOut():void 
 		{
 			//trace('focusOut: ' + _index);
+		}
+		
+		public function rollOver():void
+		{
+			//trace('rollOver: ' + _index);
+		}
+		
+		public function rollOut():void
+		{
+			//trace('rollOut: ' + _index);
 		}
 		
 		private function _clickHandler(event:MouseEvent):void

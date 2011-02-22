@@ -6,6 +6,8 @@ CopyRight: 2010
 */
 package fr.mazerte.openflowBuilder.itemRenderer
 {
+	import aze.motion.eaze;
+	
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Rectangle;
@@ -21,9 +23,18 @@ package fr.mazerte.openflowBuilder.itemRenderer
 		private var _index:int;
 		private var _data:*;
 		
+		private var _ball:Sprite;
+		
 		public function DefaultItemRenderer()
 		{
+			_ball = new Sprite();
+			_ball.addEventListener(MouseEvent.MOUSE_OVER, _ballMouseOverHandler);
+			_ball.addEventListener(MouseEvent.MOUSE_OUT, _ballMouseOutHandler);
+			addChild(_ball);
+			
 			_draw();
+			
+			_anim();
 			
 			BindingUtils.bindSetter(
 				function(pWidth:Number):void
@@ -47,6 +58,32 @@ package fr.mazerte.openflowBuilder.itemRenderer
 			);
 		}
 		
+		private function _anim():void
+		{
+			eaze(_ball).apply({x: (OpenFlowGlobals.getInstance().itemWidth / 2) - 100, y: (OpenFlowGlobals.getInstance().itemHeight / 2) - 100})
+				.to(5,{x: (OpenFlowGlobals.getInstance().itemWidth / 2) + 100, y: (OpenFlowGlobals.getInstance().itemHeight / 2) - 100})
+				.to(5,{x: (OpenFlowGlobals.getInstance().itemWidth / 2) + 100, y: (OpenFlowGlobals.getInstance().itemHeight / 2) + 100})
+				.to(5,{x: (OpenFlowGlobals.getInstance().itemWidth / 2) - 100, y: (OpenFlowGlobals.getInstance().itemHeight / 2) + 100})
+				.to(5,{x: (OpenFlowGlobals.getInstance().itemWidth / 2) - 100, y: (OpenFlowGlobals.getInstance().itemHeight / 2) - 100})
+				.onComplete(_anim);
+		}
+		
+		private function _ballMouseOverHandler(event:MouseEvent):void
+		{
+			_ball.graphics.clear();
+			_ball.graphics.beginFill(0x000000, OpenFlowGlobals.getInstance().itemAlpha);
+			_ball.graphics.drawEllipse(0, 0, 40, 40);
+			_ball.graphics.endFill();
+		}
+		
+		private function _ballMouseOutHandler(event:MouseEvent):void
+		{
+			_ball.graphics.clear();
+			_ball.graphics.beginFill(0x0000FF, OpenFlowGlobals.getInstance().itemAlpha);
+			_ball.graphics.drawEllipse(0, 0, 40, 40);
+			_ball.graphics.endFill();
+		}
+		
 		private function _draw():void
 		{			
 			removeEventListener(MouseEvent.CLICK, _clickHandler);
@@ -65,12 +102,18 @@ package fr.mazerte.openflowBuilder.itemRenderer
 			graphics.moveTo(0, OpenFlowGlobals.getInstance().itemHeight);
 			graphics.lineTo(OpenFlowGlobals.getInstance().itemWidth, 0);
 			
+			_ball.graphics.clear();
+			_ball.graphics.beginFill(0x0000FF, OpenFlowGlobals.getInstance().itemAlpha);
+			_ball.graphics.drawEllipse(0, 0, 40, 40);
+			_ball.graphics.endFill();
+			
 			addEventListener(MouseEvent.CLICK, _clickHandler);
 		}
 		
 		public function setData(data:*):void
 		{
 			_data = data;
+			_index = data;
 		}
 		
 		public function get index():int
@@ -93,13 +136,26 @@ package fr.mazerte.openflowBuilder.itemRenderer
 			//trace('focusOut: ' + _index);
 		}
 		
+		public function rollOver():void
+		{
+			trace('rollOver: ' + _index);
+		}
+		
+		public function rollOut():void
+		{
+			trace('rollOut: ' + _index);
+		}
+		
 		private function _clickHandler(event:MouseEvent):void
 		{
 			trace('click: ' + _index);
 		}
 		
 		public function dispose():void
-		{			
+		{		
+			_ball.removeEventListener(MouseEvent.MOUSE_OVER, _ballMouseOverHandler);
+			_ball.removeEventListener(MouseEvent.MOUSE_OUT, _ballMouseOutHandler);
+			
 			removeEventListener(MouseEvent.CLICK, _clickHandler);
 		}
 	}

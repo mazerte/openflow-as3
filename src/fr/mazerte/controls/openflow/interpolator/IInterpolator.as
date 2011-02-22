@@ -14,6 +14,7 @@ package fr.mazerte.controls.openflow.interpolator
 		function setLength(len:int):void;
 		function addInterpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number;
 		function moveInterpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number;
+		function overInterpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number;
 		function interpolationItem(item:*, transform:AbstractMatrix3D, index:Number, seek:Number):Number;
 		function removeInterpolationItem(item:*, index:Number, seek:Number):Number;
 		function dispose():void;
